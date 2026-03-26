@@ -1,0 +1,29 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+dist/
+dist-ssr/
+*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+*.pkl
+*.csv
+!sales.csv
+!sample_sales.csv
+!sample_sales_template.csv
+
+# Vite
+.vite/
+
+# OS specific
+.DS_Store
+Thumbs.db
