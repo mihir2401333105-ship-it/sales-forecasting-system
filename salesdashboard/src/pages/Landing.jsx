@@ -118,7 +118,7 @@ const Navbar = () => {
             S
           </div>
           <span className="text-slate-900 font-bold text-xl tracking-tight font-display">
-            SalesForecast<span className="text-blue-600">.ai</span>
+            Neuroforecast
           </span>
         </Link>
 
@@ -335,13 +335,13 @@ const Landing = () => {
                       </div>
                       <div className="flex-1 mx-4">
                         <div className="bg-slate-800 rounded-lg py-1.5 px-4 text-[11px] text-slate-500 font-medium text-center">
-                          salesforecast.ai/dashboard
+                          neuroforecast.ai/dashboard
                         </div>
                       </div>
                     </div>
                     <img
                       src="/dashboard-mockup.png"
-                      alt="Sales Forecast Dashboard — interactive analytics with real-time charts and KPIs"
+                      alt="Neuroforecast Dashboard — interactive analytics with real-time charts and KPIs"
                       className="w-full aspect-[1.5/1] object-cover"
                     />
                   </div>
@@ -737,7 +737,7 @@ const Landing = () => {
                 S
               </div>
               <span className="text-white font-bold text-xl tracking-tight font-display">
-                SalesForecast<span className="text-blue-400">.ai</span>
+                Neuroforecast
               </span>
             </div>
 
@@ -745,7 +745,7 @@ const Landing = () => {
             <div className="flex gap-10 text-sm font-bold text-slate-500 uppercase tracking-widest">
               <a href="#" className="hover:text-white transition-colors">About Us</a>
               <a href="#features" className="hover:text-white transition-colors">Features</a>
-              <a href="mailto:contact@salesforecast.ai" className="hover:text-white transition-colors flex items-center gap-1.5">
+              <a href="mailto:contact@neuroforecast.ai" className="hover:text-white transition-colors flex items-center gap-1.5">
                 <Mail className="w-3.5 h-3.5" />
                 Contact
               </a>
@@ -773,7 +773,7 @@ const Landing = () => {
           {/* Divider */}
           <div className="mt-12 pt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-slate-600 text-xs font-bold uppercase tracking-widest">
-              © 2026 SalesForecast.ai • Built for high-impact performance
+              © 2026 Neuroforecast • Built for high-impact performance
             </p>
             <div className="flex gap-6 text-xs text-slate-600 font-medium">
               <a href="#" className="hover:text-slate-400 transition-colors">Privacy</a>

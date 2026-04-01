@@ -131,9 +131,13 @@ const Dashboard = () => {
     </div>
   );
 
+  const firstName = localStorage.getItem('user_first_name') || 'Jane';
+  const emailStr = localStorage.getItem('user_email') || 'jane.doe@company.com';
+
   if (!hasData) return (
     <div className="space-y-8">
       <div>
+        <h2 className="text-xl font-bold text-slate-500 mb-2">Welcome, {firstName}! 👋</h2>
         <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">Executive Summary</h1>
         <p className="text-slate-500 font-medium">Real-time performance metrics and AI-powered projections.</p>
       </div>
@@ -154,6 +158,7 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
+          <h2 className="text-xl font-bold text-slate-500 mb-2">Welcome, {firstName}! 👋</h2>
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">Executive Summary</h1>
           <p className="text-slate-500 font-medium">
             Based on <span className="font-bold text-slate-700">{historical.length}</span> months of history

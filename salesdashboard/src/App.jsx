@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import ForecastingHub from './pages/ForecastingHub';
 import DataIngestion from './pages/DataIngestion';
 import Reports from './pages/Reports';
+import Settings from './pages/Settings';
 import './App.css';
 
 // Protected Route Component
@@ -32,13 +33,7 @@ function App() {
           <Route path="/forecasts" element={<ForecastingHub />} />
           <Route path="/data" element={<DataIngestion />} />
           <Route path="/reports" element={<Reports />} />
-          <Route path="/settings" element={
-             <div className="flex flex-col items-center justify-center p-20 bg-white rounded-3xl border border-slate-100 shadow-sm shadow-slate-200/50">
-                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-300 mb-6 font-bold text-4xl">⚙️</div>
-                <h2 className="text-2xl font-bold mb-2 font-display">User Settings</h2>
-                <p className="text-slate-500 font-medium">Manage your profile, model preferences and notifications.</p>
-             </div>
-          } />
+          <Route path="/settings" element={<Settings />} />
         </Route>
 
         {/* Fallback */}

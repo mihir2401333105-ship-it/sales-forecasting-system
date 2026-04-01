@@ -79,10 +79,12 @@ const EmptyState = ({ navigate }) => (
 // ─── ForecastingHub ───────────────────────────────────────────────────────
 const ForecastingHub = () => {
   const navigate = useNavigate();
-  const { status, predictions, modelMetrics, summary, runPredictions } = useForecast();
+  const { status, predictions, modelMetrics, summary, runPredictions, saveReport } = useForecast();
 
   const [horizon, setHorizon] = useState('12');
   const [localError, setLocalError] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const isLoading   = status === 'uploading';
   const hasData     = status === 'ready' && predictions.length > 0;
@@ -98,8 +100,35 @@ const ForecastingHub = () => {
 
   const handleRun = async () => {
     setLocalError(null);
+    setSaved(false);
     const result = await runPredictions(parseInt(horizon, 10));
     if (!result.success) setLocalError(result.error || 'Prediction failed.');
+  };
+
+  const handleSaveReport = async () => {
+    if (!hasData) return;
+    setIsSaving(true);
+    const success = await saveReport({
+      name: `Demand Forecast - Next ${horizon} Months`,
+      type: 'Forecast',
+      size: `${(Math.random() * (3 - 0.5) + 0.5).toFixed(1)} MB`, 
+      details: {
+        totalPredicted,
+        avgPred,
+        maxPred,
+        horizon,
+        predictions,
+        modelMetrics,
+        summary
+      }
+    });
+    setIsSaving(false);
+    if (success) {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 3000);
+    } else {
+      setLocalError('Failed to archive the report. Server might be down.');
+    }
   };
 
   return (
@@ -131,9 +160,19 @@ const ForecastingHub = () => {
                 <Activity className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none group-hover:text-indigo-500 transition-all" />
                 <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                 <select
-                  className="w-full h-14 pl-12 pr-10 bg-white border border-slate-200 rounded-[20px] text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-300 shadow-sm appearance-none transition-all hover:shadow-md"
+                  className="w-full h-14 pl-12 pr-10 bg-white border border-slate-200 rounded-[20px] text-sm font-bold focus:outline-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-300 shadow-sm appearance-none transition-all hover:shadow-md disabled:opacity-50"
                   value={horizon}
-                  onChange={(e) => setHorizon(e.target.value)}
+                  disabled={isLoading}
+                  onChange={async (e) => {
+                    const val = e.target.value;
+                    setHorizon(val);
+                    setSaved(false);
+                    if (!noModel) {
+                      setLocalError(null);
+                      const result = await runPredictions(parseInt(val, 10));
+                      if (!result.success) setLocalError(result.error || 'Prediction failed.');
+                    }
+                  }}
                 >
                   <option value="3">Next 3 Months</option>
                   <option value="6">Next 6 Months</option>
@@ -336,27 +375,67 @@ const ForecastingHub = () => {
           {/* Predicted Data Table */}
           {hasData && (
             <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm mt-8">
-              <h3 className="text-2xl font-extrabold text-slate-900 mb-6">Predicted Data Overview</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6 gap-4">
+                <div className="flex items-center gap-4">
+                  <h3 className="text-2xl font-extrabold text-slate-900">Predicted Data Overview</h3>
+                  <span className="text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-4 py-2 rounded-xl border border-slate-100 hidden sm:inline-block">
+                    Data from {summary?.data_range?.end ? `after ${summary.data_range.end}` : 'end of historical data'}
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={handleSaveReport}
+                    disabled={isSaving || saved}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest shadow-xl shadow-slate-900/10 hover:-translate-y-0.5 transition-all disabled:opacity-70 disabled:hover:translate-y-0"
+                  >
+                     {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 
+                      saved ? <span className="text-emerald-400">Archived!</span> : 'Generate Report'}
+                  </button>
+                  <button onClick={() => navigate('/reports')} className="text-xs font-extrabold text-blue-600 uppercase tracking-widest hover:underline transition-all">
+                    View Archive
+                  </button>
+                </div>
+              </div>
+              <div className="overflow-x-auto max-h-[440px] overflow-y-auto relative rounded-3xl border border-slate-100 scrollbar-thin scrollbar-thumb-slate-200">
+                <table className="w-full text-left border-collapse min-w-[600px]">
+                  <thead className="sticky top-0 bg-slate-50 shadow-sm z-20">
                     <tr className="border-b border-slate-200">
-                      <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-widest">Period</th>
-                      <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Predicted Sales</th>
-                      <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Lower Bound</th>
-                      <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Upper Bound</th>
+                      <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-widest bg-slate-50">Period</th>
+                      <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-widest text-right bg-slate-50">Predicted Sales</th>
+                      <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-widest text-right bg-slate-50">Lower Bound</th>
+                      <th className="py-4 px-6 text-xs font-bold text-slate-400 uppercase tracking-widest text-right bg-slate-50">Upper Bound</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-50">
                     {displayPredictions.map((row, idx) => (
-                      <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                      <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
                         <td className="py-4 px-6 text-sm font-semibold text-slate-900">{row.name}</td>
-                        <td className="py-4 px-6 text-sm font-extrabold text-indigo-600 text-right">{fmt(row.predicted)}</td>
-                        <td className="py-4 px-6 text-sm font-semibold text-slate-500 text-right">{fmt(row.lower)}</td>
-                        <td className="py-4 px-6 text-sm font-semibold text-slate-500 text-right">{fmt(row.upper)}</td>
+                        <td className="py-4 px-6 text-sm font-extrabold text-blue-600 text-right">{fmt(row.predicted)}</td>
+                        <td className="py-4 px-6 text-sm font-semibold text-red-500 text-right">{fmt(row.lower)}</td>
+                        <td className="py-4 px-6 text-sm font-semibold text-green-500 text-right">{fmt(row.upper)}</td>
                       </tr>
                     ))}
                   </tbody>
+                  <tfoot className="bg-slate-50 sticky bottom-0 border-t border-slate-200 shadow-[0_-2px_4px_rgba(0,0,0,0.02)] z-20">
+                    <tr className="border-b border-slate-100/50">
+                      <td className="py-4 px-6 text-xs font-extrabold text-slate-600 uppercase tracking-widest">Total</td>
+                      <td className="py-4 px-6 text-sm font-extrabold text-blue-600 text-right">{fmt(totalPredicted)}</td>
+                      <td className="py-4 px-6 text-sm font-extrabold text-slate-400 text-right">—</td>
+                      <td className="py-4 px-6 text-sm font-extrabold text-slate-400 text-right">—</td>
+                    </tr>
+                    <tr className="border-b border-slate-100/50">
+                      <td className="py-4 px-6 text-xs font-extrabold text-slate-600 uppercase tracking-widest">Avg Monthly</td>
+                      <td className="py-4 px-6 text-sm font-extrabold text-blue-600 text-right">{fmt(avgPred)}</td>
+                      <td className="py-4 px-6 text-sm font-extrabold text-slate-400 text-right">—</td>
+                      <td className="py-4 px-6 text-sm font-extrabold text-slate-400 text-right">—</td>
+                    </tr>
+                    <tr>
+                      <td className="py-4 px-6 text-xs font-extrabold text-slate-600 uppercase tracking-widest">Peak Forecast</td>
+                      <td className="py-4 px-6 text-sm font-extrabold text-blue-600 text-right">{fmt(maxPred)}</td>
+                      <td className="py-4 px-6 text-sm font-extrabold text-slate-400 text-right">—</td>
+                      <td className="py-4 px-6 text-sm font-extrabold text-slate-400 text-right">—</td>
+                    </tr>
+                  </tfoot>
                 </table>
               </div>
             </div>

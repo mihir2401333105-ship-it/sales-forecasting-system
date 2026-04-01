@@ -151,12 +151,29 @@ export function ForecastProvider({ children }) {
   // ── Reset ────────────────────────────────────────────────────────────────
   const reset = useCallback(() => setState(EMPTY), []);
 
+  // ── Archive/Save Report ──────────────────────────────────────────────────
+  const saveReport = useCallback(async (reportData) => {
+    try {
+      const res = await fetch(`${API}/reports`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(reportData)
+      });
+      const json = await res.json();
+      return json.success;
+    } catch (err) {
+      console.error('Failed to save report', err);
+      return false;
+    }
+  }, []);
+
   const value = {
     ...state,
     processFile,
     runPredictions,
     syncFromServer,
     reset,
+    saveReport,
   };
 
   return (

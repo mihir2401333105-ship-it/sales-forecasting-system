@@ -9,7 +9,11 @@ import {
   Search, 
   Bell, 
   ChevronRight, 
-  LayoutDashboard 
+  LayoutDashboard,
+  ChevronDown,
+  User,
+  Building,
+  LifeBuoy
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -31,11 +35,20 @@ const SidebarLink = ({ to, icon: Icon, label }) => (
 
 const MainLayout = () => {
   const navigate = useNavigate();
+  const [showProfileMenu, setShowProfileMenu] = React.useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem('session_token');
+    localStorage.removeItem('user_email');
+    localStorage.removeItem('user_first_name');
+    localStorage.removeItem('user_last_name');
     navigate('/');
   };
+
+  const firstName = localStorage.getItem('user_first_name') || 'Jane';
+  const lastName = localStorage.getItem('user_last_name') || 'Doe';
+  const emailStr = localStorage.getItem('user_email') || 'jane.doe@company.com';
+  const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
@@ -43,9 +56,9 @@ const MainLayout = () => {
       <aside className="w-72 bg-white border-r border-slate-200 flex flex-col p-6 z-30">
         <div className="flex items-center gap-3 mb-12 px-2">
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center font-bold text-white text-sm">
-            S
+            N
           </div>
-          <span className="font-bold text-xl tracking-tight text-slate-900">SalesForecast.ai</span>
+          <span className="font-bold text-xl tracking-tight text-slate-900">Neuroforecast</span>
         </div>
 
         <nav className="flex-1 space-y-2">
@@ -86,14 +99,52 @@ const MainLayout = () => {
                 <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-600 rounded-full border-2 border-white"></span>
               </button>
               
-              <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
-                 <div className="text-right">
-                    <p className="text-xs font-bold text-slate-900 uppercase leading-none mb-1">Jane Doe</p>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase leading-none tracking-widest">Administrator</p>
-                 </div>
-                 <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-bold text-white text-sm shadow-md">
-                   JD
-                 </div>
+              <div className="relative">
+                <button 
+                  onClick={() => setShowProfileMenu(!showProfileMenu)}
+                  className="flex items-center gap-3 pl-6 border-l border-slate-200 hover:opacity-80 transition-opacity focus:outline-none"
+                >
+                   <div className="text-right hidden md:block">
+                      <p className="text-xs font-bold text-slate-900 uppercase leading-none mb-1">{firstName} {lastName}</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase leading-none tracking-widest">Administrator</p>
+                   </div>
+                   <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-bold text-white text-sm shadow-md">
+                     {initials}
+                   </div>
+                   <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {showProfileMenu && (
+                  <div className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-100 py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                    <div className="px-4 py-3 border-b border-slate-50 mb-1">
+                      <p className="text-sm font-bold text-slate-900">{firstName} {lastName}</p>
+                      <p className="text-xs font-medium text-slate-500 truncate">{emailStr}</p>
+                    </div>
+                    
+                    <button onClick={() => navigate('/settings?tab=profile')} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2 transition-colors">
+                      <User className="w-4 h-4" /> Profile
+                    </button>
+                    <button onClick={() => navigate('/settings?tab=preferences')} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2 transition-colors">
+                      <Settings className="w-4 h-4" /> Settings
+                    </button>
+                    <button onClick={() => navigate('/settings?tab=organization')} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2 transition-colors">
+                      <Building className="w-4 h-4" /> Organization
+                    </button>
+                    <button onClick={() => navigate('/settings?tab=support')} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2 transition-colors">
+                      <LifeBuoy className="w-4 h-4" /> Help & Support
+                    </button>
+                    
+                    <div className="h-px bg-slate-100 my-1"></div>
+                    
+                    <button 
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" /> Logout
+                    </button>
+                  </div>
+                )}
               </div>
            </div>
         </header>

@@ -1,15 +1,31 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import pickle
 import io
 import os
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score, mean_absolute_error
 
-app = FastAPI(title="Sales Forecast API", version="2.0.0")
+from pydantic import BaseModel
+import jwt
+import bcrypt
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
+
+limiter = Limiter(key_func=get_remote_address)
+app = FastAPI(title="Neuroforecast API", version="2.0.0")
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Enforce HTTPS Only in production
+if os.getenv("ENVIRONMENT") == "production":
+    app.add_middleware(HTTPSRedirectMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -33,7 +49,102 @@ STATE = {
     "filename": None,
     "uploaded_at": None,
     "rows": 0,
+    "reports": [],          # Archive of generated reports
+    "users": {              # Users DB containing hashed passwords
+        "nirjachorghe@gmail.com": {
+            "id": "user_0",
+            "email": "nirjachorghe@gmail.com",
+            "firstName": "Nirja",
+            "lastName": "Chorghe",
+            "role": "ADMINISTRATOR",
+            "password_hash": bcrypt.hashpw(b"password123", bcrypt.gensalt()),
+            "createdAt": "2026-04-02T00:00:00Z"
+        }
+    }
 }
+
+# ============================================================
+# Security configurations
+# ============================================================
+SECRET_KEY = "neuroforecast_secure_key"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+class SignupRequest(BaseModel):
+    email: str
+    password: str
+    confirmPassword: str
+    firstName: str
+    lastName: str
+    organization: str = ""
+    agreeToTerms: bool
+
+def create_access_token(data: dict):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+@app.post("/login")
+@limiter.limit("5/minute")
+async def login(request: Request, login_data: LoginRequest):
+    user = STATE["users"].get(login_data.email)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    if not bcrypt.checkpw(login_data.password.encode("utf-8"), user["password_hash"]):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+        
+    access_token = create_access_token(data={"sub": login_data.email})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/auth/signup")
+@limiter.limit("5/minute")
+async def signup(request: Request, signup_data: SignupRequest):
+    if signup_data.email in STATE["users"]:
+        return {
+            "success": False,
+            "error": "Email already exists"
+        }
+    
+    # Validation
+    if not signup_data.agreeToTerms:
+        return {"success": False, "error": "You must agree to Terms of Service to continue"}
+    
+    if signup_data.password != signup_data.confirmPassword:
+         return {"success": False, "error": "Passwords don't match"}
+         
+    user_id = f"user_{len(STATE['users']) + 1}"
+    new_user = {
+        "id": user_id,
+        "email": signup_data.email,
+        "firstName": signup_data.firstName,
+        "lastName": signup_data.lastName,
+        "organization": signup_data.organization,
+        "role": "USER",
+        "password_hash": bcrypt.hashpw(signup_data.password.encode("utf-8"), bcrypt.gensalt()),
+        "createdAt": datetime.utcnow().isoformat() + "Z"
+    }
+    
+    STATE["users"][signup_data.email] = new_user
+    access_token = create_access_token(data={"sub": signup_data.email})
+    
+    # Strip hash from response
+    user_resp = new_user.copy()
+    user_resp.pop("password_hash")
+    
+    return {
+        "success": True,
+        "message": "Account created successfully",
+        "user": user_resp,
+        "sessionToken": access_token,
+        "expiresIn": 86400
+    }
 
 
 # -------------------------------------------------------------------
@@ -62,7 +173,7 @@ def build_future_rows(start_year: int, start_month: int, n: int):
 
 @app.get("/")
 def root():
-    return {"status": "online", "message": "Sales Forecast API v2 🚀"}
+    return {"status": "online", "message": "Neuroforecast API v2 🚀"}
 
 
 @app.get("/health")
@@ -323,6 +434,44 @@ def get_state():
         },
         "historical": STATE["historical"],
     }
+
+
+@app.post("/reports")
+async def save_report(request: Request):
+    """Save a forecast report to the archive."""
+    data = await request.json()
+    
+    report_id = len(STATE["reports"]) + 1
+    # Create the report object
+    report = {
+        "id": report_id,
+        "name": data.get("name", f"Forecast Report #{report_id}"),
+        "type": data.get("type", "Forecast"),
+        "date": datetime.now().strftime("%b %d, %Y"),
+        "status": "ready",
+        "size": data.get("size", "1.2 MB"),
+        "details": data.get("details", {})
+    }
+    
+    STATE["reports"].append(report)
+    # Sort descending by ID to show newest first
+    return {"success": True, "report": report}
+
+@app.get("/reports")
+async def get_reports():
+    """Get all saved reports."""
+    return {"reports": list(reversed(STATE["reports"]))}
+
+@app.delete("/reports/{report_id}")
+async def delete_report(report_id: int):
+    """Delete a specific report."""
+    reports = STATE["reports"]
+    for i, r in enumerate(reports):
+        if r["id"] == report_id:
+            del reports[i]
+            return {"success": True}
+    raise HTTPException(status_code=404, detail="Report not found")
+
 
 
 if __name__ == "__main__":
