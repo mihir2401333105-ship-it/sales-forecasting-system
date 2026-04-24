@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { useLanguage } from '../context/LanguageContext';
+
 const SidebarLink = ({ to, icon: Icon, label }) => (
   <NavLink 
     to={to} 
@@ -34,6 +36,7 @@ const SidebarLink = ({ to, icon: Icon, label }) => (
 );
 
 const MainLayout = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
 
@@ -50,6 +53,17 @@ const MainLayout = () => {
   const emailStr = localStorage.getItem('user_email') || 'jane.doe@company.com';
   const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
 
+  const [profileImage, setProfileImage] = React.useState(localStorage.getItem('user_profile_image') || null);
+
+  React.useEffect(() => {
+    const handleProfileUpdate = () => {
+      setProfileImage(localStorage.getItem('user_profile_image'));
+    };
+
+    window.addEventListener('profileImageUpdated', handleProfileUpdate);
+    return () => window.removeEventListener('profileImageUpdated', handleProfileUpdate);
+  }, []);
+
   return (
     <div className="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
       {/* Sidebar Navigation */}
@@ -62,20 +76,20 @@ const MainLayout = () => {
         </div>
 
         <nav className="flex-1 space-y-2">
-          <SidebarLink to="/dashboard" icon={LayoutDashboard} label="Dashboard" />
-          <SidebarLink to="/forecasts" icon={TrendingUp} label="Forecasting Hub" />
-          <SidebarLink to="/data" icon={Database} label="Data Ingestion" />
-          <SidebarLink to="/reports" icon={BarChart3} label="Reports & Export" />
+          <SidebarLink to="/dashboard" icon={LayoutDashboard} label={t('nav.dashboard')} />
+          <SidebarLink to="/forecasts" icon={TrendingUp} label={t('nav.forecasting')} />
+          <SidebarLink to="/data" icon={Database} label={t('nav.data')} />
+          <SidebarLink to="/reports" icon={BarChart3} label={t('nav.reports')} />
         </nav>
 
         <div className="mt-auto space-y-2 pt-6 border-t border-slate-100">
-           <SidebarLink to="/settings" icon={Settings} label="Settings" />
+           <SidebarLink to="/settings" icon={Settings} label={t('nav.settings')} />
            <button 
              onClick={handleLogout}
              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-semibold text-slate-500 hover:bg-red-50 hover:text-red-600"
            >
              <LogOut className="w-5 h-5" />
-             <span className="text-sm font-bold">Logout</span>
+             <span className="text-sm font-bold">{t('nav.logout')}</span>
            </button>
         </div>
       </aside>
@@ -88,7 +102,7 @@ const MainLayout = () => {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
               <input 
                 type="text" 
-                placeholder="Search forecasts, products, or reports..."
+                placeholder={t('nav.search')}
                 className="w-full h-10 pl-10 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-600/10 focus:border-blue-600/30 transition-all font-medium"
               />
            </div>
@@ -108,8 +122,12 @@ const MainLayout = () => {
                       <p className="text-xs font-bold text-slate-900 uppercase leading-none mb-1">{firstName} {lastName}</p>
                       <p className="text-[10px] font-bold text-slate-400 uppercase leading-none tracking-widest">Administrator</p>
                    </div>
-                   <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-bold text-white text-sm shadow-md">
-                     {initials}
+                   <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-bold text-white text-sm shadow-md overflow-hidden relative">
+                     {profileImage ? (
+                       <img src={profileImage} alt="Profile" className="w-full h-full object-cover" />
+                     ) : (
+                       initials
+                     )}
                    </div>
                    <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showProfileMenu ? 'rotate-180' : ''}`} />
                 </button>
@@ -123,16 +141,10 @@ const MainLayout = () => {
                     </div>
                     
                     <button onClick={() => navigate('/settings?tab=profile')} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2 transition-colors">
-                      <User className="w-4 h-4" /> Profile
+                      <User className="w-4 h-4" /> {t('settings.profile')}
                     </button>
                     <button onClick={() => navigate('/settings?tab=preferences')} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2 transition-colors">
-                      <Settings className="w-4 h-4" /> Settings
-                    </button>
-                    <button onClick={() => navigate('/settings?tab=organization')} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2 transition-colors">
-                      <Building className="w-4 h-4" /> Organization
-                    </button>
-                    <button onClick={() => navigate('/settings?tab=support')} className="w-full text-left px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 flex items-center gap-2 transition-colors">
-                      <LifeBuoy className="w-4 h-4" /> Help & Support
+                      <Settings className="w-4 h-4" /> {t('settings.preferences')}
                     </button>
                     
                     <div className="h-px bg-slate-100 my-1"></div>
@@ -141,7 +153,7 @@ const MainLayout = () => {
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors"
                     >
-                      <LogOut className="w-4 h-4" /> Logout
+                      <LogOut className="w-4 h-4" /> {t('nav.logout')}
                     </button>
                   </div>
                 )}

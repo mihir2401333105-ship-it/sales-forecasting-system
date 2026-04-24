@@ -84,7 +84,10 @@ const EmptyState = ({ navigate }) => (
 );
 
 // ─── Dashboard ────────────────────────────────────────────────────────────
+import { useLanguage } from '../context/LanguageContext';
+
 const Dashboard = () => {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const {
     status, summary, modelMetrics,
@@ -137,9 +140,9 @@ const Dashboard = () => {
   if (!hasData) return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-bold text-slate-500 mb-2">Welcome, {firstName}! 👋</h2>
-        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">Executive Summary</h1>
-        <p className="text-slate-500 font-medium">Real-time performance metrics and AI-powered projections.</p>
+        <h2 className="text-xl font-bold text-slate-500 mb-2">{t('dash.welcome')}, {firstName}! 👋</h2>
+        <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">{t('dash.title')}</h1>
+        <p className="text-slate-500 font-medium">{t('dash.subtitle')}</p>
       </div>
       <EmptyState navigate={navigate} />
     </div>
@@ -158,18 +161,17 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <h2 className="text-xl font-bold text-slate-500 mb-2">Welcome, {firstName}! 👋</h2>
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">Executive Summary</h1>
+          <h2 className="text-xl font-bold text-slate-500 mb-2">{t('dash.welcome')}, {firstName}!</h2>
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 mb-2">{t('dash.title')}</h1>
           <p className="text-slate-500 font-medium">
-            Based on <span className="font-bold text-slate-700">{historical.length}</span> months of history
-            · Predicting <span className="font-bold text-slate-700">{predictions.length}</span> months ahead
+             {t('dash.subtitle')}
           </p>
         </div>
         <button
           onClick={() => navigate('/data')}
           className="flex items-center gap-2 px-5 py-3 bg-white border border-slate-200 rounded-2xl text-sm font-bold shadow-sm hover:bg-slate-50 transition-all"
         >
-          <Calendar className="w-4 h-4 text-slate-400" /> Change Dataset
+          <Calendar className="w-4 h-4 text-slate-400" /> {t('dash.change_dataset')}
         </button>
       </div>
 
@@ -177,13 +179,13 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <KPI
           icon={DollarSign}
-          label="Total Historical Sales"
+          label={t('dash.historical_sales')}
           value={fmt(totalHist)}
           bg="bg-blue-50 text-blue-600"
         />
         <KPI
           icon={TrendingUp}
-          label="Total Predicted Sales"
+          label={t('dash.predicted_sales')}
           value={fmt(totalPred)}
           sub={pct(growthRate)}
           positive={(growthRate || 0) >= 0}
@@ -191,13 +193,13 @@ const Dashboard = () => {
         />
         <KPI
           icon={BarChart2}
-          label="Avg Monthly Sales"
+          label={t('dash.avg_monthly')}
           value={fmt(avgMonthly)}
           bg="bg-amber-50 text-amber-600"
         />
         <KPI
           icon={Activity}
-          label="Model Accuracy (R²)"
+          label={t('dash.accuracy')}
           value={r2 != null ? `${r2}%` : '—'}
           sub={mae != null ? `MAE: ${fmt(mae)}` : null}
           positive={true}
@@ -209,9 +211,9 @@ const Dashboard = () => {
       <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h3 className="text-xl font-bold text-slate-900 mb-1">Revenue Forecast</h3>
+            <h3 className="text-xl font-bold text-slate-900 mb-1">{t('dash.revenue_forecast')}</h3>
             <p className="text-sm text-slate-400 font-semibold tracking-wide uppercase">
-              Historical (solid) · Predicted (dashed)
+              {t('dash.historical')} (solid) · {t('dash.predicted')} (dashed)
             </p>
           </div>
           <div className="flex items-center gap-6 text-xs font-bold uppercase tracking-widest text-slate-400">

@@ -115,7 +115,7 @@ const Navbar = () => {
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-3 group">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center font-bold text-white text-lg shadow-lg shadow-blue-600/30 group-hover:shadow-blue-600/50 transition-shadow">
-            S
+            N
           </div>
           <span className="text-slate-900 font-bold text-xl tracking-tight font-display">
             Neuroforecast
@@ -200,7 +200,7 @@ const Landing = () => {
     { name: 'Nirja Chorghe', role: 'Backend Developer', initials: 'NC', color: 'from-blue-500 to-indigo-600' },
     { name: 'Mihir Chaudhari', role: 'ML Engineer', initials: 'MC', color: 'from-violet-500 to-purple-600' },
     { name: 'Jeet Gawad', role: 'Frontend Developer', initials: 'JG', color: 'from-emerald-500 to-teal-600' },
-    { name: 'Prasad Dalvi', role: 'Database Manager', initials: 'PD', color: 'from-emerald-500 to-teal-600' },
+    { name: 'Prasad Dalvi', role: 'Frontend Developer / Database Manager ' , initials: 'PD', color: 'from-emerald-500 to-teal-600' },
   ];
 
   return (
@@ -280,13 +280,13 @@ const Landing = () => {
                   Get Started
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
-                <button
+                {/* <button
                   id="cta-view-demo"
                   className="group px-8 py-4 bg-white border-2 border-slate-200 text-slate-700 rounded-2xl font-bold text-lg hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center gap-2"
                 >
                   <Play className="w-5 h-5 text-blue-600" />
                   View Demo
-                </button>
+                </button> */}
               </motion.div>
 
               {/* Trust Signal */}
@@ -302,7 +302,7 @@ const Landing = () => {
                       key={i}
                       className={`w-8 h-8 ${bg} rounded-full border-2 border-white flex items-center justify-center text-white text-[10px] font-bold`}
                     >
-                      {['M', 'A', 'R', 'S'][i]}
+                      {['N', 'J', 'M', 'P'][i]}
                     </div>
                   ))}
                 </div>

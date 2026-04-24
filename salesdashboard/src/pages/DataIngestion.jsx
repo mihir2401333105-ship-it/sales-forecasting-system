@@ -294,14 +294,14 @@ const DataIngestion = () => {
                 <SelectDropdown
                   label="Date / Time Column"
                   value={dateCol}
-                  options={columns}
+                  options={Array.from(new Set([...columns, 'Year', 'Month']))}
                   onChange={setDateCol}
                   placeholder="— Select date column —"
                 />
                 <SelectDropdown
                   label="Sales / Revenue Column"
                   value={salesCol}
-                  options={columns}
+                  options={Array.from(new Set([...columns, 'Year', 'Month']))}
                   onChange={setSalesCol}
                   placeholder="— Select sales column —"
                 />

@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { Layout, ShieldCheck, Mail, Lock, ArrowRight, User, Building, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import { useLanguage } from '../context/LanguageContext';
+
 const Auth = () => {
+  const { t } = useLanguage();
   const [isLogin, setIsLogin] = useState(true);
   
   // Form State
@@ -113,7 +116,9 @@ const Auth = () => {
         
         if (res.ok) {
           localStorage.setItem('session_token', data.access_token);
-          localStorage.setItem('user_email', email);
+          localStorage.setItem('user_email', data.user.email);
+          localStorage.setItem('user_first_name', data.user.firstName);
+          localStorage.setItem('user_last_name', data.user.lastName);
           navigate('/dashboard');
         } else {
           setToast({ type: 'error', message: data.detail || 'Invalid email or password' });
@@ -249,10 +254,10 @@ const Auth = () => {
         <div className="w-full max-w-[480px] bg-white p-10 rounded-3xl shadow-xl shadow-slate-200/50">
           <div className="mb-10">
             <h2 className="text-3xl font-extrabold mb-2 tracking-tight text-slate-900">
-              {isLogin ? 'Welcome back' : 'Create an account'}
+              {isLogin ? t('auth.login_title') : t('auth.signup_title')}
             </h2>
             <p className="text-slate-500 font-medium">
-              {isLogin ? 'Enter your credentials to access your dashboard' : 'Join thousands of sales teams worldwide'}
+              {isLogin ? t('auth.login_subtitle') : t('auth.signup_subtitle')}
             </p>
           </div>
 
@@ -263,7 +268,7 @@ const Auth = () => {
               <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-6 overflow-hidden">
                 <div className="grid grid-cols-2 gap-4">
                    <div className="space-y-2">
-                     <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">First Name</label>
+                     <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">{t('settings.first_name')}</label>
                      <div className="relative">
                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
                        <input 
@@ -278,7 +283,7 @@ const Auth = () => {
                      {errors.firstName && <p className="text-xs font-semibold text-red-500 ml-1">{errors.firstName}</p>}
                    </div>
                    <div className="space-y-2">
-                     <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Last Name</label>
+                     <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">{t('settings.last_name')}</label>
                      <div className="relative">
                        <input 
                          type="text" 
@@ -311,7 +316,7 @@ const Auth = () => {
             )}
 
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Email address</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">{t('auth.email')}</label>
               <div className="relative">
                 <Mail className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${errors.email ? 'text-red-400' : 'text-slate-400'}`} />
                 <input 
@@ -327,7 +332,7 @@ const Auth = () => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">Password</label>
+              <label className="text-xs font-bold uppercase tracking-widest text-slate-500 ml-1">{t('auth.password')}</label>
               <div className="relative">
                 <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 ${errors.password ? 'text-red-400' : 'text-slate-400'}`} />
                 <input 
@@ -397,14 +402,14 @@ const Auth = () => {
                 <div className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
               ) : (
                 <>
-                  {isLogin ? 'Sign in' : 'Start free trial'}
+                  {isLogin ? t('auth.sign_in') : t('auth.sign_up')}
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
             </button>
             
             {/* OAuth Options */}
-            <div className="mt-8 flex items-center justify-between gap-4">
+            {/* <div className="mt-8 flex items-center justify-between gap-4">
                <hr className="flex-1 border-slate-200" />
                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Or continue with</span>
                <hr className="flex-1 border-slate-200" />
@@ -427,12 +432,12 @@ const Auth = () => {
                   <img src="https://www.svgrepo.com/show/452288/microsoft.svg" alt="Microsoft" className="w-5 h-5" />
                   Microsoft
                </button>
-            </div>
+            </div> */}
           </form>
 
           <div className="mt-8 pt-8 border-t border-slate-100 flex items-center justify-center gap-2 text-sm">
             <span className="text-slate-500 font-medium">
-              {isLogin ? "Don't have an account?" : "Already have an account?"}
+              {isLogin ? t('auth.no_account') : t('auth.have_account')}
             </span>
             <button 
               type="button"
@@ -440,7 +445,7 @@ const Auth = () => {
               onClick={() => setIsLogin(!isLogin)}
               className="font-extrabold text-blue-600 hover:text-blue-700 focus:outline-none"
             >
-              {isLogin ? 'Sign up' : 'Sign in'}
+              {isLogin ? t('auth.sign_up') : t('auth.sign_in')}
             </button>
           </div>
         </div>

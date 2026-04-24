@@ -101,7 +101,17 @@ async def login(request: Request, login_data: LoginRequest):
         raise HTTPException(status_code=401, detail="Invalid email or password")
         
     access_token = create_access_token(data={"sub": login_data.email})
-    return {"access_token": access_token, "token_type": "bearer"}
+    
+    # Return user details for the frontend to store
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user": {
+            "email": user["email"],
+            "firstName": user["firstName"],
+            "lastName": user["lastName"]
+        }
+    }
 
 @app.post("/auth/signup")
 @limiter.limit("5/minute")
